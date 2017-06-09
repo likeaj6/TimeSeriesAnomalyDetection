@@ -5,6 +5,8 @@ import matplotlib.font_manager
 import datetime
 from sklearn.ensemble import IsolationForest
 
+
+#plot original timeseries data, along with rolling mean and std
 def plotTS(timeseries):
     rolmean = timeseries.rolling(window=12,center=False).mean()
     rolstd = timeseries.rolling(window=12,center=False).std()
@@ -29,39 +31,45 @@ def plotIsolationForest(timeseries):
     plt.show()
 
 # dateparse = lambda dates: pd.datetime.strptime(dates, '%H:%M:%S')
+
+#read fitbit data, parse into timeseries data
 df = pd.read_csv("testFitBit.csv", parse_dates=['time'], index_col='time')
 df.index = pd.to_datetime(df.index, format='%H:%M:%S')
+#delete original index column, use time periods instead
 df.drop(df.columns[[0]], axis=1, inplace=True)
+#eventually change length to be extracted automatically
 length = 96
 
+#make a copy of dataframe
 timeseries = df
-#
-print timeseries.index
-# #
-# original_headers = list(df.columns.values)
-# time = df.iloc[:, 1].as_matrix()
-# steps = df.iloc[:, 2].as_matrix()
-#
-# timeseries = pd.Series(steps, index=time)
-# x = timeseries.reshape(length, 1)
-#
-# print timeseries.interpolate()
-#
 
-# rng = np.random.RandomState(42)
+#hyper-parameter, can adjust
+rng = np.random.RandomState(42)
 
-clf = IsolationForest(max_samples=96, random_state=42)
+#initialize isolation forest with random state
+clf = IsolationForest(max_samples=96, rng)
+
+#fit classifier on data
 clf.fit(timeseries)
 #
+#predict using training data
 y_pred_train = clf.predict(timeseries)
+
+#predict using test data
 # y_pred_test = clf.predict([1000])
-#
+
+#training accuracy
 print y_pred_train
 # print y_pred_test
+
 result = timeseries
 result['prediction'] = y_pred_train
-# print result
 
+print result
+
+
+###unfinished###
+# still need to figure out how to plot out decision_function
 xx, yy = np.meshgrid(np.linspace(0, 24, 50), np.linspace(0, 2000, 50))
 Z = clf.decision_function(np.c_[yy.ravel()])
 Z = Z.reshape(xx.shape)
